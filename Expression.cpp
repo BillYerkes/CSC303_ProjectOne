@@ -1,3 +1,53 @@
+//###########################################################################################################################
+// CS 303
+// Project One
+// Bill Yerkes         wy2n6@mail.umkc.edu
+// Aditya Rai		   adityarai@mail.umkc.edu
+// David Tooley        dwtvf2@mail.umkc.edu
+//
+// PROBLEM: Create an infix expression parser.  It need to support the following arithmetic and logical operators:
+//
+//          Operator				Precedence			Example 
+//			! //logical not				8				! 1 // = 0 (false) 
+//			++ //prefix increment		8				++2 //3 
+//			-- //prefix decrement		8				--2 //1 
+//			- //negative				8				-1  //-1 
+//			^ //power					7				2^3 // 8 
+//			*, / , %  //arithmetic		6				6 * 2 // 12 
+//			+, - //arithmetic			5				6 – 2 //4 
+//			>, >= , <, <= //comparison	4				6 > 5 // 1(true) ==, 
+//			!= //equality comparison	3				6!=5 // 1(true) 
+//			&&  //logical and			2				6>5 && 4>5 //0(false) 
+//			|| //logical OR				1				1 || 0 //1 (true) 
+//
+// The expression will be passed in as a string and the solution must be able to handle irrelivent white space
+// such as 1+2 is the same as 1 + 2.  The solution must also check for invalid expression, such as mismatched
+// parenthesises and division by zero.  The solution must evaluate the expression and return the results.
+// Major assumption is that all number are integers and the results will be an integer.  User interface is not
+// required for this project.
+//
+// 
+// ERROR HANDLING: Error from the class (Expression) are raised to the calling modual.  Error type is string.
+//
+// OTHER COMMENTS:
+//
+// l_  : Local Varible
+// v_  : passed by value
+// r_  : passed by reverence
+// str : string
+// chr : char
+// int : integer
+// unt : unsigned integer
+// bol : Boolean
+// que : queue
+// vec : vector
+// stk : stack
+// udt : user defined type
+//
+//############################################################################################################################
+
+
+
 #include "stdafx.h"
 #include "Expression.h"
 
@@ -5,17 +55,19 @@
 #include <math.h>
 
 
-//#include <exception>
-
-
 //############################################################################################################################
-// clear
+// getOperand
 //
-// Purpose:  
+// Purpose:  Extract numeric (integers) values from the Expression string.  Create an Operand Element type assigning the 
+//           relative properties for the Element.
 //
-// Inputs: No inputs
+// Inputs: std::string  v_strExpression, 
+//         bool         &r_bolNegative, 
+//         unsigned int v_untSize, 
+//         int          v_intNegativeSignPosition, 
+//         unsigned int &r_untIndex
 //
-// Output: 
+// Output: Element
 //
 //############################################################################################################################
 
@@ -70,26 +122,27 @@ Element Expression::getOperand(std::string v_strExpression, bool &r_bolNegative,
 
 
 //############################################################################################################################
-// clear
+// parse
 //
-// Purpose:  
+// Purpose:  Break up the expression into individual elements (operators, operands, parenthises, etc.)  assigning the 
+//           relative properties for the individual elements (precidence, starting position, value, type)
 //
-// Inputs: No inputs
+// Inputs: std::string v_strExpression
 //
-// Output: 
+// Output: std::vector<Element>
 //
 //############################################################################################################################
 std::vector<Element> Expression::parse(std::string v_strExpression)
 {
-	std::vector<Element> l_vecElements;
-	unsigned int         l_untSize = 0;
-	Element              l_udtElement;
-	bool                 l_bolNegative = false;
-	int                  l_intNegativeSignPosition = 0;
-	char                 l_chrTemp = ' ';
-	std::string          l_strTemp = "";
-	std::string          l_strErrorMessage;
-	bool                 l_bolValid = true;
+	std::vector<Element> l_vecElements;                         //Vector of elements, individual components of the expression
+	unsigned int         l_untSize = 0;                         //Size of the expression
+	Element              l_udtElement;                          //Element object used for adding to vector
+	bool                 l_bolNegative = false;                 //does the "-" indicate a negative value
+	int                  l_intNegativeSignPosition = 0;         //the negative sign start postion
+	char                 l_chrTemp = ' ';                       //temp char used to simplify a section of code
+	std::string          l_strTemp = "";                        //temp string used to simplify a section of code
+	std::string          l_strErrorMessage;                     //String to hold error message, to make sure the correct error type is returned
+	bool                 l_bolValid = true;                     //Is the expression currently valid, (flag to exit loop)
 
 	    // save the size of the string so we do not have to keep looking it up
 		l_untSize = v_strExpression.length();
@@ -393,25 +446,28 @@ std::vector<Element> Expression::parse(std::string v_strExpression)
 }
 
 //############################################################################################################################
-// clear
+// validate
 //
-// Purpose:  
+// Purpose:  Check to see if the expression that was given has any error that can be detected before we attempt to evaluate it.
 //
-// Inputs: No inputs
+// Inputs: std::vector<Element> &r_vecElements        list of elements of the expression.  We need to use a vector, because
+//                                                    there will be need to sometimes check the previous element of the expression.
 //
-// Output: 
+// Output: bool                                       True if no errors found, False if we found an error
+//                                                    If we find an error we will raise an exception (might be able to use a void
+//                                                    for the returnt type instead.)
 //
 //############################################################################################################################
 bool Expression::validate(std::vector<Element> &r_vecElements)
 {
-	int          l_intParendCount = 0;
-	unsigned int l_untSize = r_vecElements.size();
-	bool         l_blnValid = true;
-	std::string  l_strErrorMessage = "";
-	unsigned int i = 0;
-	int          l_intTemp = 0;
+	int          l_intParendCount = 0;                      // How many unmatched open parends do we have
+	unsigned int l_untSize = r_vecElements.size();          // How many elements do we have
+	bool         l_blnValid = true;                         // is the expression valid (flag to exit)
+	std::string  l_strErrorMessage = "";                    // String to hold error message, to make sure the correct error type is returned
+	unsigned int i = 0;                                     // used to step through the vector
+	int          l_intTemp = 0;                             // temp variable used to help procedure
 
-	//try {
+
 		while ((i < l_untSize) && (l_blnValid)) {
 			switch (r_vecElements[i].type)
 			{
@@ -487,17 +543,24 @@ bool Expression::validate(std::vector<Element> &r_vecElements)
 			i++;
 		} //end while
 
+		//if the parend count is > 0 we have too many opens and not enough closes
+		if (l_intParendCount > 0) {
+			l_strErrorMessage = "Expression is missing Close Parenthasis.";
+			l_blnValid = false;
+			throw l_strErrorMessage;
+		}
 		return l_blnValid;
 }
 
 //############################################################################################################################
-// clear
+// convertToPostfix
 //
-// Purpose:  
+// Purpose:  Convet the expression from infix notation to post fix notation.  Algorith was taken from class presenation and 
+//           information availbe on various web sites
 //
-// Inputs: No inputs
+// Inputs: std::vector<Element> &r_vecElements          Vector of elements in in fix order
 //
-// Output: 
+// Output: std::queue<Element>                          Queue of elements in post fix order
 //
 //############################################################################################################################
 std::queue<Element> Expression::convertToPostfix(std::vector<Element> &r_vecElements)
@@ -522,8 +585,6 @@ std::queue<Element> Expression::convertToPostfix(std::vector<Element> &r_vecElem
 					}
 					//If the precedence of the scanned operator is greater than the precedence of the operator in the stack(or the stack is empty), push it
 					else if (l_stkWorkStack.top().precedence <= r_vecElements[i].precedence)
-	                //else if (l_stkWorkStack.top().precedence < r_vecElements[i].precedence)
-	                //
 						l_stkWorkStack.push(r_vecElements[i]);
 					else {
 						// Else, Pop the operator from the stack until the precedence of the scanned operator is less-equal to the precedence of the operator residing on the top of the stack. Push the scanned operator to the stack.
@@ -557,13 +618,15 @@ std::queue<Element> Expression::convertToPostfix(std::vector<Element> &r_vecElem
 }
 
 //############################################################################################################################
-// clear
+// computeBinaryOperation
 //
-// Purpose:  
+// Purpose:  Compute the results of a binary operation on two integer values
 //
-// Inputs: No inputs
+// Inputs: int v_intValue1                first operand
+//         int v_intValue2                second operand
+//         std::string v_strOperator      binary operator
 //
-// Output: 
+// Output: int                            Results of the operation
 //
 //############################################################################################################################
 int Expression::computeBinaryOperation(int v_intValue1, int v_intValue2, std::string v_strOperator)
@@ -633,13 +696,14 @@ int Expression::computeBinaryOperation(int v_intValue1, int v_intValue2, std::st
 }
 
 //############################################################################################################################
-// clear
+// computeUnaryOperation
 //
-// Purpose:  
+// Purpose:  Compute the results of a unary operation on an integer values
 //
-// Inputs: No inputs
+// Inputs: int v_intValue1                first operand
+//         std::string v_strOperator      unary operator
 //
-// Output: 
+// Output: int                            Results of the operation
 //
 //############################################################################################################################
 int Expression::computeUnaryOperation(int v_intValue1, std::string v_strOperator)
@@ -663,13 +727,13 @@ int Expression::computeUnaryOperation(int v_intValue1, std::string v_strOperator
 }
 
 //############################################################################################################################
-// clear
+// computeResults
 //
-// Purpose:  
+// Purpose:  Compute the value of a postFix expression. 
 //
-// Inputs: No inputs
+// Inputs: std::queue<Element> &r_queElements         Queue of elments in postFix notation to evaluate
 //
-// Output: 
+// Output: int                                        Computed value of the expression
 //
 //############################################################################################################################
 int Expression::computeResults(std::queue<Element> &r_queElements)
@@ -760,13 +824,13 @@ Expression::~Expression()
 }
 
 //############################################################################################################################
-// clear
+// evaluate
 //
-// Purpose:  
+// Purpose:  Compute the results of a given equation, or if the expression is invalid a raised error.
 //
-// Inputs: No inputs
+// Inputs: std::string v_strExpression         String representation of a mathmatical equation
 //
-// Output: 
+// Output:                                     The computed results (as an integer) of the given equation.
 //
 //############################################################################################################################
 int Expression::evaluate(std::string v_strExpression)
